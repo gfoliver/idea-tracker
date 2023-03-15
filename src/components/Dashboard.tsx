@@ -1,23 +1,34 @@
 import React from 'react';
+import useLocalStorageState from 'use-local-storage-state';
+import { useAutoAnimate } from '@formkit/auto-animate/react';
 
 import icon from '../assets/icon.svg';
-import Modal, { IModal } from './Modal';
+import Idea from '../interfaces/Idea';
+import Modal, { IModalRef } from './Modal';
 
 const Dashboard: React.FC = () => {
-    const modalRef = React.useRef<IModal>(null);
+    const modalRef = React.useRef<IModalRef>(null);
+    const [ideas, setIdeas] = useLocalStorageState<Idea[]>('ideas', { defaultValue: [] });
+    const [parent] = useAutoAnimate();
+
+    const removeIdea = (index: number) => {
+        let i = ideas;
+        i.splice(index, 1);
+        setIdeas(i);
+    }
 
     return (
-        <div className="Dashboard min-h-screen flex flex-col">
-            <Modal ref={modalRef} />
+        <div className="flex flex-col min-h-screen Dashboard">
+            <Modal ref={modalRef} onSubmit={idea => setIdeas([...ideas, idea])} />
             <header>
-                <div className="container mx-auto py-12">
+                <div className="container py-12 mx-auto">
                     <div className="flex justify-between items-center">
-                        <h1 className="text-5xl font-bold flex items-center">
+                        <h1 className="flex items-center text-5xl font-bold">
                             <img src={icon} alt="Light Bulb" className='mr-2' />
                             IdeaTracker
                         </h1>
                         <button 
-                            className='bg-background-lighter py-5 px-12 rounded-lg drop-shadow-md text-primary font-bold text-2xl'
+                            className='px-12 py-5 text-2xl font-bold rounded-lg drop-shadow-md bg-background-lighter text-primary'
                             onClick={() => modalRef.current?.open()}
                         >
                             I've had an idea!
@@ -25,14 +36,20 @@ const Dashboard: React.FC = () => {
                     </div>
                 </div>
             </header>
-            <main className='bg-background-darker flex-grow'>
-                <div className="container mx-auto py-14">
-                    <div className="grid grid-cols-4 gap-4">
-                        {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((idea) => (
-                            <div className="idea p-6 bg-background rounded-lg drop-shadow-sm">
-                                <h2 className="font-bold mb-4">Idea {idea}</h2>
-                                <p className="mb-6">Brief description of the idea...</p>
-                                <button className='bg-primary p-3 rounded leading-none font-bold'>
+            <main className='flex-grow bg-background-darker'>
+                <div className="container py-14 mx-auto">
+                    <div ref={parent} className="grid grid-cols-4 gap-4">
+                        {ideas.map((idea, index) => (
+                            <div key={index} className="relative p-6 rounded-lg drop-shadow-sm idea bg-background">
+                                <button 
+                                    className="absolute top-4 right-4 font-bold text-background-darker"
+                                    onClick={() => removeIdea(index)}
+                                >
+                                    x
+                                </button>
+                                <h2 className="mb-4 font-bold">{idea.name}</h2>
+                                <p className="mb-6">{idea.description}</p>
+                                <button className='p-3 font-bold leading-none rounded bg-primary'>
                                     Start this idea
                                 </button>
                             </div>

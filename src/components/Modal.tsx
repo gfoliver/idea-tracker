@@ -1,16 +1,29 @@
 import React from 'react';
 import { Dialog } from '@headlessui/react';
+import { useForm } from 'react-hook-form';
+import Idea from '../interfaces/Idea';
 
-export interface IModal {
+export interface IModalRef {
     open(): void;
 }
 
-const Modal = React.forwardRef<IModal>((props, ref) => {
+interface IModalProps {
+    onSubmit(data: Idea): void;
+}
+
+const Modal = React.forwardRef<IModalRef, IModalProps>(({ onSubmit }, ref) => {
     const [isOpen, setIsOpen] = React.useState(false);
+    const { handleSubmit, register, reset } = useForm<Idea>();
 
     const open = () => setIsOpen(true);
 
     React.useImperativeHandle(ref, () => ({ open }));
+
+    const handle = (data: Idea) => {
+        onSubmit(data);
+        setIsOpen(false);
+        reset();
+    }
 
     return (
         <Dialog 
@@ -18,19 +31,30 @@ const Modal = React.forwardRef<IModal>((props, ref) => {
             onClose={() => setIsOpen(false)}
             className="relative z-50"
         >
-            <Dialog.Overlay className="fixed inset-0 flex items-center justify-center">
+            <Dialog.Overlay className="flex fixed inset-0 justify-center items-center">
                 <Dialog.Backdrop className="fixed inset-0 bg-black opacity-60" />
-                <Dialog.Panel className="bg-background px-8 p-10 max-w-full rounded-lg" style={{minWidth: 560}}>
-                    <h2 className="text-4xl text-white font-bold mb-8">New Idea</h2>
-                    <div className="mb-4 w-full">
-                        <label htmlFor="new-idea-name" className='block text-white font-bold mb-2'>Name</label>
-                        <input type="text" className='w-full p-4 leading-none rounded bg-background-darker text-white' id="new-idea-name" />
-                    </div>
-                    <div className="mb-4">
-                        <label htmlFor="new-idea-description" className='block text-white font-bold mb-2'>Brief description</label>
-                        <textarea id="new-idea-description" className='w-full p-4 rounded bg-background-darker text-white resize-y' />
-                    </div>
-                    <button className='bg-primary p-4 w-full rounded font-bold text-white' onClick={() => setIsOpen(false)}>Save</button>
+                <Dialog.Panel className="p-10 px-8 max-w-full rounded-lg bg-background" style={{minWidth: 560}}>
+                    <form onSubmit={handleSubmit(handle)}>
+                        <h2 className="mb-8 text-4xl font-bold text-white">New Idea</h2>
+                        <div className="mb-4 w-full">
+                            <label htmlFor="new-idea-name" className='block mb-2 font-bold text-white'>Name</label>
+                            <input 
+                                type="text" 
+                                className='p-4 w-full leading-none text-white rounded bg-background-darker' 
+                                id="new-idea-name"
+                                {...register('name')}
+                            />
+                        </div>
+                        <div className="mb-4">
+                            <label htmlFor="new-idea-description" className='block mb-2 font-bold text-white'>Brief description</label>
+                            <textarea 
+                                id="new-idea-description" 
+                                className='p-4 w-full text-white rounded resize-y bg-background-darker' 
+                                {...register('description')}
+                            />
+                        </div>
+                        <button className='p-4 w-full font-bold text-white rounded bg-primary' type='submit'>Save</button>
+                    </form>
                 </Dialog.Panel>
             </Dialog.Overlay>
         </Dialog>
